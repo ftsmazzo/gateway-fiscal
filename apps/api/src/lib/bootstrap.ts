@@ -41,19 +41,40 @@ export async function bootstrapUsers(env: Env): Promise<void> {
 async function bootstrapDemoCompany(env: Env): Promise<void> {
   // EPICAT — dados oficiais (Daniel / NFE-GO-LIVE 29/10/2026)
   const cnpj = "69406699000190";
+  const epicatData = {
+    razaoSocial: "EPICAT DISTRIBUIDORA LTDA",
+    nomeFantasia: "EPICAT",
+    cnpj,
+    ie: "260395253118",
+    regime: "Simples Nacional",
+    uf: "SP",
+    municipio: "Catanduva",
+    codigoIbge: "3511102",
+    ambiente: "homologacao" as const,
+  };
+
   let company = await prisma.company.findUnique({ where: { cnpj } });
+
+  // Migra a demo antiga (00000000000191) para EPICAT, preservando API Keys.
+  if (!company) {
+    const oldDemo = await prisma.company.findUnique({ where: { cnpj: "00000000000191" } });
+    if (oldDemo) {
+      company = await prisma.company.update({
+        where: { id: oldDemo.id },
+        data: {
+          ...epicatData,
+          webhookUrl: env.BOOTSTRAP_DEMO_WEBHOOK_URL ?? oldDemo.webhookUrl,
+          webhookSecret: env.BOOTSTRAP_DEMO_WEBHOOK_SECRET ?? oldDemo.webhookSecret,
+        },
+      });
+      console.log(`[bootstrap] Demo migrada para EPICAT: ${company.id}`);
+    }
+  }
+
   if (!company) {
     company = await prisma.company.create({
       data: {
-        razaoSocial: "EPICAT DISTRIBUIDORA LTDA",
-        nomeFantasia: "EPICAT",
-        cnpj,
-        ie: "260395253118",
-        regime: "Simples Nacional",
-        uf: "SP",
-        municipio: "Catanduva",
-        codigoIbge: "3511102",
-        ambiente: "homologacao",
+        ...epicatData,
         webhookUrl: env.BOOTSTRAP_DEMO_WEBHOOK_URL ?? null,
         webhookSecret: env.BOOTSTRAP_DEMO_WEBHOOK_SECRET ?? null,
       },
@@ -63,13 +84,7 @@ async function bootstrapDemoCompany(env: Env): Promise<void> {
     company = await prisma.company.update({
       where: { id: company.id },
       data: {
-        razaoSocial: "EPICAT DISTRIBUIDORA LTDA",
-        nomeFantasia: "EPICAT",
-        ie: "260395253118",
-        regime: "Simples Nacional",
-        uf: "SP",
-        municipio: "Catanduva",
-        codigoIbge: "3511102",
+        ...epicatData,
         ...(env.BOOTSTRAP_DEMO_WEBHOOK_URL
           ? {
               webhookUrl: env.BOOTSTRAP_DEMO_WEBHOOK_URL,
@@ -82,7 +97,7 @@ async function bootstrapDemoCompany(env: Env): Promise<void> {
   }
 
   const existingKey = await prisma.apiKey.findFirst({
-    where: { companyId: company.id, label: "epicat-homolog", active: true },
+    where: { companyId: company.id, active: true },
   });
   if (!existingKey) {
     const generated = generateApiKey();
