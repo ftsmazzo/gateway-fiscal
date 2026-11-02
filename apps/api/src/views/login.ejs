@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login · Gateway Fiscal</title>
+  <%- include('_styles') %>
+</head>
+<body>
+<main>
+  <div class="card" style="max-width:420px;margin:4rem auto">
+    <h1>Gateway Fiscal</h1>
+    <p class="muted">Acesso interno — Admin, Contador ou Empresa</p>
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="post" action="/admin/login">
+      <label>E-mail</label>
+      <input type="email" name="email" required autocomplete="username" />
+      <label>Senha</label>
+      <input type="password" name="password" required autocomplete="current-password" />
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>

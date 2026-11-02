@@ -1,0 +1,17 @@
+<header>
+  <div class="brand">Gateway Fiscal</div>
+  <nav>
+    <a href="/admin">Dashboard</a>
+    <% if (user.role === 'ADMIN' || user.role === 'CONTADOR') { %>
+      <a href="/admin/empresas">Empresas</a>
+      <a href="/admin/health">Health</a>
+    <% } %>
+    <% if (user.role === 'ADMIN') { %>
+      <a href="/admin/usuarios">Usuários</a>
+    <% } %>
+    <span class="muted"><%= user.name %> · <%= user.role %></span>
+    <form method="post" action="/admin/logout" style="display:inline;margin:0">
+      <button type="submit" class="btn secondary" style="margin:0">Sair</button>
+    </form>
+  </nav>
+</header>

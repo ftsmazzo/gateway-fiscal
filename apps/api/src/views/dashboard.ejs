@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard · Gateway Fiscal</title>
+  <%- include('_styles') %>
+</head>
+<body>
+<%- include('_nav') %>
+<main>
+  <h1>Dashboard</h1>
+  <div class="grid">
+    <div class="card">
+      <div class="muted">Postgres</div>
+      <span class="pill <%= health.postgres ? 'ok' : 'bad' %>"><%= health.postgres ? 'ok' : 'down' %></span>
+    </div>
+    <div class="card">
+      <div class="muted">Redis</div>
+      <span class="pill <%= health.redis ? 'ok' : 'bad' %>"><%= health.redis ? 'ok' : 'down' %></span>
+      <div class="muted"><%= health.redisDetail || '' %></div>
+    </div>
+    <div class="card">
+      <div class="muted">Empresas</div>
+      <strong><%= companies.length %></strong>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Empresas</h2>
+    <% if (user.role === 'ADMIN' || user.role === 'CONTADOR') { %>
+      <p><a class="btn" href="/admin/empresas/nova">Nova empresa</a></p>
+    <% } %>
+    <table>
+      <thead>
+        <tr><th>Razão social</th><th>CNPJ</th><th>Ambiente</th><th>Certificado</th><th>Docs</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% companies.forEach(c => { %>
+          <tr>
+            <td><%= c.razaoSocial %></td>
+            <td><%= c.cnpj %></td>
+            <td><span class="pill"><%= c.ambiente %></span></td>
+            <td>
+              <% if (c.certificate) { %>
+                <span class="pill ok">enviado</span>
+              <% } else { %>
+                <span class="pill warn">ausente</span>
+              <% } %>
+            </td>
+            <td><%= c._count.documents %></td>
+            <td><a href="/admin/empresas/<%= c.id %>">Abrir</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

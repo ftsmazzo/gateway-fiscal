@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nova empresa · Gateway Fiscal</title>
+  <%- include('_styles') %>
+</head>
+<body>
+<%- include('_nav') %>
+<main>
+  <h1>Nova empresa</h1>
+  <p class="muted">Preenchimento do Contador — não depende do ERP.</p>
+  <% if (error) { %><div class="error"><%= error %></div><% } %>
+  <form class="card" method="post" action="/admin/empresas">
+    <div class="form-grid">
+      <div>
+        <label>Razão social</label>
+        <input name="razaoSocial" required value="<%= company?.razaoSocial || '' %>" />
+      </div>
+      <div>
+        <label>Nome fantasia</label>
+        <input name="nomeFantasia" value="<%= company?.nomeFantasia || '' %>" />
+      </div>
+      <div>
+        <label>CNPJ</label>
+        <input name="cnpj" required value="<%= company?.cnpj || '' %>" />
+      </div>
+      <div>
+        <label>IE</label>
+        <input name="ie" value="<%= company?.ie || '' %>" />
+      </div>
+      <div>
+        <label>Regime</label>
+        <select name="regime">
+          <option value="">—</option>
+          <option>Simples Nacional</option>
+          <option>Lucro Presumido</option>
+          <option>Lucro Real</option>
+        </select>
+      </div>
+      <div>
+        <label>UF</label>
+        <input name="uf" maxlength="2" value="<%= company?.uf || '' %>" />
+      </div>
+      <div>
+        <label>Município</label>
+        <input name="municipio" value="<%= company?.municipio || '' %>" />
+      </div>
+      <div>
+        <label>Código IBGE</label>
+        <input name="codigoIbge" value="<%= company?.codigoIbge || '' %>" />
+      </div>
+      <div>
+        <label>CEP</label>
+        <input name="cep" value="<%= company?.cep || '' %>" />
+      </div>
+      <div>
+        <label>Logradouro</label>
+        <input name="logradouro" value="<%= company?.logradouro || '' %>" />
+      </div>
+      <div>
+        <label>Número</label>
+        <input name="numero" value="<%= company?.numero || '' %>" />
+      </div>
+      <div>
+        <label>Bairro</label>
+        <input name="bairro" value="<%= company?.bairro || '' %>" />
+      </div>
+      <div>
+        <label>E-mail fiscal</label>
+        <input name="emailFiscal" type="email" value="<%= company?.emailFiscal || '' %>" />
+      </div>
+      <div>
+        <label>Série NF-e</label>
+        <input name="serieNfe" type="number" value="<%= company?.serieNfe || 1 %>" />
+      </div>
+      <div>
+        <label>Próximo número</label>
+        <input name="proximoNumeroNfe" type="number" value="<%= company?.proximoNumeroNfe || 1 %>" />
+      </div>
+    </div>
+    <button type="submit">Salvar empresa</button>
+  </form>
+</main>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Health · Gateway Fiscal</title>
+  <%- include('_styles') %>
+</head>
+<body>
+<%- include('_nav') %>
+<main>
+  <h1>Health</h1>
+  <p class="muted">Também disponível em <code>GET /health</code> (sem autenticação).</p>
+  <div class="grid">
+    <div class="card">
+      <div class="muted">Postgres</div>
+      <span class="pill <%= postgresOk ? 'ok' : 'bad' %>"><%= postgresOk ? 'ok' : 'down' %></span>
+    </div>
+    <div class="card">
+      <div class="muted">Redis</div>
+      <span class="pill <%= redis.ok ? 'ok' : 'bad' %>"><%= redis.ok ? 'ok' : 'down' %></span>
+      <div class="muted"><%= redis.latencyMs ? redis.latencyMs + 'ms' : (redis.error || '') %></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Certificados</h2>
+    <table>
+      <thead><tr><th>Empresa</th><th>CNPJ</th><th>Arquivo</th><th>Validade</th></tr></thead>
+      <tbody>
+        <% certs.forEach(c => { %>
+          <tr>
+            <td><%= c.company.razaoSocial %></td>
+            <td><%= c.company.cnpj %></td>
+            <td><%= c.subject || '—' %></td>
+            <td><%= c.validTo ? c.validTo.toISOString().slice(0,10) : 'não lida ainda' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

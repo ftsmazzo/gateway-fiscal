@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= company.razaoSocial %> · Gateway Fiscal</title>
+  <%- include('_styles') %>
+</head>
+<body>
+<%- include('_nav') %>
+<main>
+  <h1><%= company.razaoSocial %></h1>
+  <p class="muted">CNPJ <%= company.cnpj %> · <%= company.uf || 'UF?' %> · ambiente <strong><%= company.ambiente %></strong></p>
+
+  <% if (flash) { %><div class="flash">Atualizado: <%= flash %></div><% } %>
+  <% if (rawKey) { %>
+    <div class="flash">
+      API Key gerada (copie agora, não será exibida de novo):<br />
+      <code><%= rawKey %></code>
+    </div>
+  <% } %>
+
+  <% if (user.role === 'ADMIN' || user.role === 'CONTADOR') { %>
+  <form class="card" method="post" action="/admin/empresas/<%= company.id %>">
+    <h2>Dados cadastrais</h2>
+    <div class="form-grid">
+      <div><label>Razão social</label><input name="razaoSocial" required value="<%= company.razaoSocial %>" /></div>
+      <div><label>Nome fantasia</label><input name="nomeFantasia" value="<%= company.nomeFantasia || '' %>" /></div>
+      <div><label>IE</label><input name="ie" value="<%= company.ie || '' %>" /></div>
+      <div><label>IM</label><input name="im" value="<%= company.im || '' %>" /></div>
+      <div>
+        <label>Regime</label>
+        <input name="regime" value="<%= company.regime || '' %>" />
+      </div>
+      <div><label>UF</label><input name="uf" maxlength="2" value="<%= company.uf || '' %>" /></div>
+      <div><label>Município</label><input name="municipio" value="<%= company.municipio || '' %>" /></div>
+      <div><label>Código IBGE</label><input name="codigoIbge" value="<%= company.codigoIbge || '' %>" /></div>
+      <div><label>CEP</label><input name="cep" value="<%= company.cep || '' %>" /></div>
+      <div><label>Logradouro</label><input name="logradouro" value="<%= company.logradouro || '' %>" /></div>
+      <div><label>Número</label><input name="numero" value="<%= company.numero || '' %>" /></div>
+      <div><label>Bairro</label><input name="bairro" value="<%= company.bairro || '' %>" /></div>
+      <div><label>E-mail fiscal</label><input name="emailFiscal" value="<%= company.emailFiscal || '' %>" /></div>
+      <div><label>Telefone</label><input name="telefone" value="<%= company.telefone || '' %>" /></div>
+      <div><label>Série NF-e</label><input type="number" name="serieNfe" value="<%= company.serieNfe %>" /></div>
+      <div><label>Próximo número</label><input type="number" name="proximoNumeroNfe" value="<%= company.proximoNumeroNfe %>" /></div>
+    </div>
+    <label><input type="checkbox" name="homologacaoOk" <%= company.homologacaoOk ? 'checked' : '' %> /> Homologação OK (Contador)</label>
+    <button type="submit">Salvar dados</button>
+  </form>
+
+  <form class="card" method="post" action="/admin/empresas/<%= company.id %>/certificado" enctype="multipart/form-data">
+    <h2>Certificado A1</h2>
+    <% if (company.certificate) { %>
+      <p><span class="pill ok">Arquivo presente</span> <%= company.certificate.subject || '' %></p>
+      <% if (company.certificate.validTo) { %>
+        <p class="muted">Validade: <%= company.certificate.validTo.toISOString().slice(0,10) %></p>
+      <% } %>
+    <% } else { %>
+      <p><span class="pill warn">Sem certificado</span></p>
+    <% } %>
+    <label>Arquivo .pfx</label>
+    <input type="file" name="file" accept=".pfx,.p12" required />
+    <label>Senha do certificado</label>
+    <input type="password" name="password" required />
+    <button type="submit">Enviar certificado</button>
+  </form>
+
+  <div class="card">
+    <h2>Regras fiscais</h2>
+    <table>
+      <thead><tr><th>Grupo</th><th>NCM</th><th>CFOP</th><th>CST/CSOSN</th><th>Revisado</th></tr></thead>
+      <tbody>
+        <% company.fiscalRules.forEach(r => { %>
+          <tr>
+            <td><%= r.grupoProduto %></td>
+            <td><%= r.ncm %></td>
+            <td><%= r.cfopDentro || '-' %> / <%= r.cfopFora || '-' %></td>
+            <td><%= r.cstOuCsosn || '-' %></td>
+            <td><%= r.revisado ? 'sim' : 'não' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <form method="post" action="/admin/empresas/<%= company.id %>/regras">
+      <div class="form-grid">
+        <div><label>Grupo/produto</label><input name="grupoProduto" required /></div>
+        <div><label>NCM</label><input name="ncm" required /></div>
+        <div><label>CFOP dentro UF</label><input name="cfopDentro" /></div>
+        <div><label>CFOP fora UF</label><input name="cfopFora" /></div>
+        <div><label>CST/CSOSN</label><input name="cstOuCsosn" /></div>
+        <div><label>Natureza</label><input name="naturezaOperacao" /></div>
+      </div>
+      <label>Infos complementares</label>
+      <textarea name="infosComplementares" rows="2"></textarea>
+      <label><input type="checkbox" name="revisado" /> Revisado</label>
+      <button type="submit">Adicionar regra</button>
+    </form>
+  </div>
+  <% } %>
+
+  <% if (user.role === 'ADMIN') { %>
+  <form class="card" method="post" action="/admin/empresas/<%= company.id %>/ambiente">
+    <h2>Ambiente (Admin)</h2>
+    <label>Ambiente ativo</label>
+    <select name="ambiente">
+      <option value="homologacao" <%= company.ambiente === 'homologacao' ? 'selected' : '' %>>Homologação</option>
+      <option value="producao" <%= company.ambiente === 'producao' ? 'selected' : '' %>>Produção</option>
+    </select>
+    <label><input type="checkbox" name="producaoLiberada" <%= company.producaoLiberada ? 'checked' : '' %> /> Produção liberada</label>
+    <button type="submit">Salvar ambiente</button>
+  </form>
+
+  <div class="card">
+    <h2>API Keys</h2>
+    <table>
+      <thead><tr><th>Label</th><th>Prefixo</th><th>Ambiente</th><th>Ativa</th><th>Último uso</th></tr></thead>
+      <tbody>
+        <% company.apiKeys.forEach(k => { %>
+          <tr>
+            <td><%= k.label %></td>
+            <td><code><%= k.keyPrefix %>…</code></td>
+            <td><%= k.ambiente %></td>
+            <td><%= k.active ? 'sim' : 'não' %></td>
+            <td><%= k.lastUsedAt ? k.lastUsedAt.toISOString() : '—' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <form method="post" action="/admin/empresas/<%= company.id %>/api-keys">
+      <div class="form-grid">
+        <div><label>Label</label><input name="label" placeholder="gestao-epi-homolog" required /></div>
+        <div>
+          <label>Ambiente da key</label>
+          <select name="ambiente">
+            <option value="homologacao">Homologação</option>
+            <option value="producao">Produção</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit">Gerar API Key</button>
+    </form>
+  </div>
+  <% } %>
+
+  <div class="card">
+    <h2>Documentos recentes</h2>
+    <table>
+      <thead><tr><th>Criado</th><th>Número</th><th>Status</th><th>External ID</th></tr></thead>
+      <tbody>
+        <% company.documents.forEach(d => { %>
+          <tr>
+            <td><%= d.createdAt.toISOString().slice(0,19) %></td>
+            <td><%= d.serie || '-' %>/<%= d.numero || '-' %></td>
+            <td><%= d.status %></td>
+            <td><%= d.externalId || '—' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

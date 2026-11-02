@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Usuários · Gateway Fiscal</title>
+  <%- include('_styles') %>
+</head>
+<body>
+<%- include('_nav') %>
+<main>
+  <h1>Usuários</h1>
+  <% if (error) { %><div class="error"><%= error %></div><% } %>
+  <div class="card">
+    <table>
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Ativo</th></tr></thead>
+      <tbody>
+        <% users.forEach(u => { %>
+          <tr>
+            <td><%= u.name %></td>
+            <td><%= u.email %></td>
+            <td><%= u.role %></td>
+            <td><%= u.active ? 'sim' : 'não' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <form class="card" method="post" action="/admin/usuarios">
+    <h2>Novo usuário</h2>
+    <div class="form-grid">
+      <div><label>Nome</label><input name="name" required /></div>
+      <div><label>E-mail</label><input type="email" name="email" required /></div>
+      <div><label>Senha</label><input type="password" name="password" required minlength="8" /></div>
+      <div>
+        <label>Papel</label>
+        <select name="role">
+          <option value="CONTADOR">CONTADOR (todas as empresas)</option>
+          <option value="ADMIN">ADMIN</option>
+          <option value="EMPRESA">EMPRESA</option>
+        </select>
+      </div>
+    </div>
+    <button type="submit">Criar</button>
+  </form>
+</main>
+</body>
+</html>

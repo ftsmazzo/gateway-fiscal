@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CONTADOR
+  EMPRESA
+}
+
+enum Ambiente {
+  homologacao
+  producao
+}
+
+enum DocStatus {
+  rascunho
+  na_fila
+  processando
+  autorizada
+  rejeitada
+  cancelada
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  companies    UserCompany[]
+}
+
+model Company {
+  id               String    @id @default(cuid())
+  razaoSocial      String
+  nomeFantasia     String?
+  cnpj             String    @unique
+  ie               String?
+  im               String?
+  regime           String?
+  emailFiscal      String?
+  telefone         String?
+  cep              String?
+  logradouro       String?
+  numero           String?
+  complemento      String?
+  bairro           String?
+  municipio        String?
+  uf               String?
+  codigoIbge       String?
+  serieNfe         Int       @default(1)
+  proximoNumeroNfe Int       @default(1)
+  ambiente         Ambiente  @default(homologacao)
+  producaoLiberada Boolean   @default(false)
+  homologacaoOk    Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  certificate      Certificate?
+  fiscalRules      FiscalRule[]
+  apiKeys          ApiKey[]
+  documents        Document[]
+  users            UserCompany[]
+}
+
+model UserCompany {
+  userId    String
+  companyId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, companyId])
+}
+
+model Certificate {
+  id              String   @id @default(cuid())
+  companyId       String   @unique
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fileEncrypted   Bytes
+  passwordEnc     String
+  subject         String?
+  cnpjCert        String?
+  validFrom       DateTime?
+  validTo         DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FiscalRule {
+  id                    String   @id @default(cuid())
+  companyId             String
+  company               Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  grupoProduto          String
+  ncm                   String
+  cfopDentro            String?
+  cfopFora              String?
+  cstOuCsosn            String?
+  pisAliquota           Decimal? @db.Decimal(7, 4)
+  cofinsAliquota        Decimal? @db.Decimal(7, 4)
+  icmsAliquota          Decimal? @db.Decimal(7, 4)
+  naturezaOperacao      String?
+  infosComplementares   String?
+  revisado              Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  label      String
+  keyHash    String    @unique
+  keyPrefix  String
+  ambiente   Ambiente  @default(homologacao)
+  active     Boolean   @default(true)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([companyId])
+}
+
+model Document {
+  id            String     @id @default(cuid())
+  companyId     String
+  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  externalId    String?
+  status        DocStatus  @default(rascunho)
+  serie         Int?
+  numero        Int?
+  chaveAcesso   String?
+  protocolo     String?
+  rejectionCode String?
+  rejectionMsg  String?
+  payloadJson   Json?
+  xmlStorage    String?
+  danfeStorage  String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([companyId, status])
+  @@index([externalId])
+}

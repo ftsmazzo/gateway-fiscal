@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Empresas · Gateway Fiscal</title>
+  <%- include('_styles') %>
+</head>
+<body>
+<%- include('_nav') %>
+<main>
+  <h1>Empresas</h1>
+  <p class="muted">Contador configura qualquer CNPJ. Admin gera API keys e libera produção.</p>
+  <p><a class="btn" href="/admin/empresas/nova">Nova empresa</a></p>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Razão social</th><th>CNPJ</th><th>UF</th><th>Ambiente</th>
+          <th>Cert</th><th>Regras</th><th>Keys</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% companies.forEach(c => { %>
+          <tr>
+            <td><%= c.razaoSocial %></td>
+            <td><%= c.cnpj %></td>
+            <td><%= c.uf || '-' %></td>
+            <td><%= c.ambiente %></td>
+            <td><%= c.certificate ? 'sim' : 'não' %></td>
+            <td><%= c._count.fiscalRules %></td>
+            <td><%= c._count.apiKeys %></td>
+            <td><a href="/admin/empresas/<%= c.id %>">Configurar</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>
