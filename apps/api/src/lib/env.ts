@@ -7,10 +7,15 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default("redis://localhost:6379"),
   SESSION_SECRET: z.string().min(16),
+  SEFAZ_MODE: z.enum(["mock", "sefaz"]).default("mock"),
   BOOTSTRAP_ADMIN_EMAIL: z.string().email().optional(),
   BOOTSTRAP_ADMIN_PASSWORD: z.string().min(8).optional(),
   BOOTSTRAP_CONTADOR_EMAIL: z.string().email().optional(),
   BOOTSTRAP_CONTADOR_PASSWORD: z.string().min(8).optional(),
+  BOOTSTRAP_DEMO_COMPANY: z
+    .string()
+    .optional()
+    .transform((v) => v === "true" || v === "1"),
 });
 
 export type Env = z.infer<typeof schema>;

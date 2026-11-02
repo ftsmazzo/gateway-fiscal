@@ -1,5 +1,5 @@
 import type { Env } from "./env.js";
-import { hashPassword } from "./auth.js";
+import { generateApiKey, hashPassword } from "./auth.js";
 import { prisma } from "./prisma.js";
 
 export async function bootstrapUsers(env: Env): Promise<void> {
@@ -31,5 +31,47 @@ export async function bootstrapUsers(env: Env): Promise<void> {
       });
       console.log(`[bootstrap] Contador criado: ${env.BOOTSTRAP_CONTADOR_EMAIL}`);
     }
+  }
+
+  if (env.BOOTSTRAP_DEMO_COMPANY) {
+    await bootstrapDemoCompany();
+  }
+}
+
+async function bootstrapDemoCompany(): Promise<void> {
+  const cnpj = "00000000000191";
+  let company = await prisma.company.findUnique({ where: { cnpj } });
+  if (!company) {
+    company = await prisma.company.create({
+      data: {
+        razaoSocial: "EMPRESA DEMO GATEWAY FISCAL LTDA",
+        nomeFantasia: "Demo GF",
+        cnpj,
+        ie: "ISENTO",
+        regime: "Simples Nacional",
+        uf: "SP",
+        municipio: "Sao Paulo",
+        codigoIbge: "3550308",
+        ambiente: "homologacao",
+      },
+    });
+    console.log(`[bootstrap] Empresa demo criada: ${company.id}`);
+  }
+
+  const existingKey = await prisma.apiKey.findFirst({
+    where: { companyId: company.id, label: "demo-homolog", active: true },
+  });
+  if (!existingKey) {
+    const generated = generateApiKey();
+    await prisma.apiKey.create({
+      data: {
+        companyId: company.id,
+        label: "demo-homolog",
+        keyHash: generated.hash,
+        keyPrefix: generated.prefix,
+        ambiente: "homologacao",
+      },
+    });
+    console.log(`[bootstrap] API Key demo (copie agora): ${generated.raw}`);
   }
 }

@@ -28,7 +28,7 @@ async function main() {
   });
 
   await healthRoutes(app, env);
-  await apiRoutes(app);
+  await apiRoutes(app, env);
   await adminRoutes(app, env);
 
   app.get("/", async (_request, reply) => reply.redirect("/admin"));

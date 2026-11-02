@@ -1,4 +1,4 @@
-# Build context = raiz do repositório
+# Preferir Dockerfile da raiz do repo no EasyPanel
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY apps/api/package.json apps/api/package-lock.json* ./

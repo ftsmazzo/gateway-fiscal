@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { Env } from "../lib/env.js";
 import { prisma } from "../lib/prisma.js";
 import { pingRedis } from "../lib/redis.js";
+import { queueDepth, readWorkerHeartbeat } from "../lib/queue.js";
 
 export async function healthRoutes(app: FastifyInstance, env: Env) {
   app.get("/health", async (_request, reply) => {
@@ -23,6 +24,29 @@ export async function healthRoutes(app: FastifyInstance, env: Env) {
       detail: redis.ok ? `${redis.latencyMs}ms` : redis.error,
     };
 
+    let depth = 0;
+    let heartbeat: string | null = null;
+    if (redis.ok) {
+      try {
+        depth = await queueDepth(env.REDIS_URL);
+        heartbeat = await readWorkerHeartbeat(env.REDIS_URL);
+      } catch (err) {
+        checks.queue = {
+          ok: false,
+          detail: err instanceof Error ? err.message : "queue_error",
+        };
+      }
+    }
+
+    const workerFresh =
+      !!heartbeat && Date.now() - new Date(heartbeat).getTime() < 90_000;
+    checks.worker = {
+      ok: workerFresh,
+      detail: heartbeat ? `last=${heartbeat}` : "no_heartbeat",
+    };
+    checks.queue = checks.queue ?? { ok: true, detail: `depth=${depth}` };
+    checks.sefazMode = { ok: true, detail: env.SEFAZ_MODE };
+
     const companies = await prisma.company.count().catch(() => 0);
     const certsExpiring = await prisma.certificate
       .count({
@@ -40,10 +64,12 @@ export async function healthRoutes(app: FastifyInstance, env: Env) {
       detail: `expiring_30d=${certsExpiring}`,
     };
 
-    const allOk = Object.values(checks).every((c) => c.ok);
-    const status = allOk ? "ok" : checks.postgres.ok ? "degraded" : "down";
+    // Worker ausente = degraded (API ainda sobe), postgres/redis down = down
+    const criticalOk = checks.postgres.ok && checks.redis.ok;
+    const allOk = criticalOk && checks.worker.ok;
+    const status = allOk ? "ok" : criticalOk ? "degraded" : "down";
 
-    return reply.code(allOk ? 200 : 503).send({
+    return reply.code(criticalOk ? 200 : 503).send({
       status,
       service: "gateway-fiscal",
       companies,

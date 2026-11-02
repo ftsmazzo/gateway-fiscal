@@ -1,4 +1,6 @@
-# Atalho: EasyPanel pode apontar para este arquivo na raiz
+# Build context = raiz do repositório
+# Serviço api:  CMD padrão
+# Serviço worker: command = node dist/worker.js  (sem migrate)
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY apps/api/package.json apps/api/package-lock.json* ./

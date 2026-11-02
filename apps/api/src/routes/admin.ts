@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { generateApiKey, hashPassword, requireSession, verifyPassword } from "../lib/auth.js";
+import { encryptBytes, encryptText } from "../lib/crypto.js";
 import type { Env } from "../lib/env.js";
 import { prisma } from "../lib/prisma.js";
 import { pingRedis } from "../lib/redis.js";
@@ -9,6 +10,7 @@ function onlyDigits(value: string): string {
 }
 
 export async function adminRoutes(app: FastifyInstance, env: Env) {
+  const encryptionSecret = env.SESSION_SECRET;
   app.get("/admin/login", async (request, reply) => {
     if (request.cookies.gf_session) {
       return reply.redirect("/admin");
@@ -225,20 +227,19 @@ export async function adminRoutes(app: FastifyInstance, env: Env) {
 
     if (!fileBuf) return reply.redirect(`/admin/empresas/${id}?flash=cert_ausente`);
 
-    // Fase 0: armazena bytes + senha ofuscada simples (trocar por crypto forte na fase SEFAZ).
-    const passwordEnc = Buffer.from(password, "utf8").toString("base64");
-    const fileBytes = Uint8Array.from(fileBuf);
+    const fileEncrypted = Uint8Array.from(encryptBytes(fileBuf, encryptionSecret));
+    const passwordEnc = encryptText(password, encryptionSecret);
     await prisma.certificate.upsert({
       where: { companyId: id },
       create: {
         companyId: id,
-        fileEncrypted: fileBytes,
+        fileEncrypted,
         passwordEnc,
         subject: filename,
         validTo: null,
       },
       update: {
-        fileEncrypted: fileBytes,
+        fileEncrypted,
         passwordEnc,
         subject: filename,
       },
