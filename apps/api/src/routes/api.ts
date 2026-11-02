@@ -14,6 +14,27 @@ const emitSchema = z.object({
 });
 
 export async function apiRoutes(app: FastifyInstance, env: Env) {
+  app.get("/v1/company", async (request, reply) => {
+    const companyId = await requireApiKey(request, reply);
+    if (!companyId) return;
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+      include: { certificate: { select: { id: true } } },
+    });
+    if (!company) return reply.code(404).send({ error: "not_found" });
+    return {
+      id: company.id,
+      razaoSocial: company.razaoSocial,
+      cnpj: company.cnpj,
+      ie: company.ie,
+      regime: company.regime,
+      uf: company.uf,
+      municipio: company.municipio,
+      ambiente: company.ambiente,
+      hasCertificate: Boolean(company.certificate),
+    };
+  });
+
   app.post("/v1/nfe", async (request, reply) => {
     const companyId = await requireApiKey(request, reply);
     if (!companyId) return;

@@ -39,50 +39,62 @@ export async function bootstrapUsers(env: Env): Promise<void> {
 }
 
 async function bootstrapDemoCompany(env: Env): Promise<void> {
-  const cnpj = "00000000000191";
+  // EPICAT — dados oficiais (Daniel / NFE-GO-LIVE 29/10/2026)
+  const cnpj = "69406699000190";
   let company = await prisma.company.findUnique({ where: { cnpj } });
   if (!company) {
     company = await prisma.company.create({
       data: {
-        razaoSocial: "EMPRESA DEMO GATEWAY FISCAL LTDA",
-        nomeFantasia: "Demo GF",
+        razaoSocial: "EPICAT DISTRIBUIDORA LTDA",
+        nomeFantasia: "EPICAT",
         cnpj,
-        ie: "ISENTO",
+        ie: "260395253118",
         regime: "Simples Nacional",
         uf: "SP",
-        municipio: "Sao Paulo",
-        codigoIbge: "3550308",
+        municipio: "Catanduva",
+        codigoIbge: "3511102",
         ambiente: "homologacao",
         webhookUrl: env.BOOTSTRAP_DEMO_WEBHOOK_URL ?? null,
         webhookSecret: env.BOOTSTRAP_DEMO_WEBHOOK_SECRET ?? null,
       },
     });
-    console.log(`[bootstrap] Empresa demo criada: ${company.id}`);
-  } else if (env.BOOTSTRAP_DEMO_WEBHOOK_URL) {
+    console.log(`[bootstrap] EPICAT criada: ${company.id}`);
+  } else {
     company = await prisma.company.update({
       where: { id: company.id },
       data: {
-        webhookUrl: env.BOOTSTRAP_DEMO_WEBHOOK_URL,
-        webhookSecret: env.BOOTSTRAP_DEMO_WEBHOOK_SECRET ?? company.webhookSecret,
+        razaoSocial: "EPICAT DISTRIBUIDORA LTDA",
+        nomeFantasia: "EPICAT",
+        ie: "260395253118",
+        regime: "Simples Nacional",
+        uf: "SP",
+        municipio: "Catanduva",
+        codigoIbge: "3511102",
+        ...(env.BOOTSTRAP_DEMO_WEBHOOK_URL
+          ? {
+              webhookUrl: env.BOOTSTRAP_DEMO_WEBHOOK_URL,
+              webhookSecret: env.BOOTSTRAP_DEMO_WEBHOOK_SECRET ?? company.webhookSecret,
+            }
+          : {}),
       },
     });
-    console.log(`[bootstrap] Webhook demo atualizado`);
+    console.log(`[bootstrap] EPICAT atualizada: ${company.id}`);
   }
 
   const existingKey = await prisma.apiKey.findFirst({
-    where: { companyId: company.id, label: "demo-homolog", active: true },
+    where: { companyId: company.id, label: "epicat-homolog", active: true },
   });
   if (!existingKey) {
     const generated = generateApiKey();
     await prisma.apiKey.create({
       data: {
         companyId: company.id,
-        label: "demo-homolog",
+        label: "epicat-homolog",
         keyHash: generated.hash,
         keyPrefix: generated.prefix,
         ambiente: "homologacao",
       },
     });
-    console.log(`[bootstrap] API Key demo (copie agora): ${generated.raw}`);
+    console.log(`[bootstrap] API Key EPICAT (copie agora): ${generated.raw}`);
   }
 }
