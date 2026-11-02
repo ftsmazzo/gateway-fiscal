@@ -96,6 +96,22 @@ async function bootstrapDemoCompany(env: Env): Promise<void> {
     console.log(`[bootstrap] EPICAT atualizada: ${company.id}`);
   }
 
+  // Se a demo antiga ainda existir em paralelo, traz docs e keys para a EPICAT.
+  const oldDemo = await prisma.company.findUnique({ where: { cnpj: "00000000000191" } });
+  if (oldDemo && oldDemo.id !== company.id) {
+    const movedDocs = await prisma.document.updateMany({
+      where: { companyId: oldDemo.id },
+      data: { companyId: company.id },
+    });
+    const movedKeys = await prisma.apiKey.updateMany({
+      where: { companyId: oldDemo.id },
+      data: { companyId: company.id },
+    });
+    console.log(
+      `[bootstrap] Migrados da demo → EPICAT: docs=${movedDocs.count} keys=${movedKeys.count}`,
+    );
+  }
+
   const existingKey = await prisma.apiKey.findFirst({
     where: { companyId: company.id, active: true },
   });
