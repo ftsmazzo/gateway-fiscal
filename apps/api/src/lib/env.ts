@@ -16,6 +16,8 @@ const schema = z.object({
     .string()
     .optional()
     .transform((v) => v === "true" || v === "1"),
+  BOOTSTRAP_DEMO_WEBHOOK_URL: z.string().url().optional(),
+  BOOTSTRAP_DEMO_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof schema>;

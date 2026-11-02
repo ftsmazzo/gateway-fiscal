@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Documentos · Gateway Fiscal</title>
+  <%- include('_styles') %>
+</head>
+<body>
+<%- include('_nav') %>
+<main>
+  <h1>Fila de documentos</h1>
+  <p class="muted">Últimos 100. Atualize a página para ver o worker.</p>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Quando</th><th>Empresa</th><th>Nº</th><th>Status</th>
+          <th>Chave / rejeição</th><th>External</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% docs.forEach(d => { %>
+          <tr>
+            <td><%= d.createdAt.toISOString().slice(0,19) %></td>
+            <td><%= d.company.razaoSocial %></td>
+            <td><%= d.serie || '-' %>/<%= d.numero || '-' %></td>
+            <td>
+              <% if (d.status === 'autorizada') { %><span class="pill ok"><%= d.status %></span>
+              <% } else if (d.status === 'rejeitada') { %><span class="pill bad"><%= d.status %></span>
+              <% } else { %><span class="pill warn"><%= d.status %></span><% } %>
+            </td>
+            <td class="muted">
+              <%= d.chaveAcesso || '' %>
+              <%= d.rejectionCode ? (d.rejectionCode + ' — ' + (d.rejectionMsg || '')) : '' %>
+            </td>
+            <td><%= d.externalId || '—' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

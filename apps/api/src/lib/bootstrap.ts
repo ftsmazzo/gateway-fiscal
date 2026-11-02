@@ -34,11 +34,11 @@ export async function bootstrapUsers(env: Env): Promise<void> {
   }
 
   if (env.BOOTSTRAP_DEMO_COMPANY) {
-    await bootstrapDemoCompany();
+    await bootstrapDemoCompany(env);
   }
 }
 
-async function bootstrapDemoCompany(): Promise<void> {
+async function bootstrapDemoCompany(env: Env): Promise<void> {
   const cnpj = "00000000000191";
   let company = await prisma.company.findUnique({ where: { cnpj } });
   if (!company) {
@@ -53,9 +53,20 @@ async function bootstrapDemoCompany(): Promise<void> {
         municipio: "Sao Paulo",
         codigoIbge: "3550308",
         ambiente: "homologacao",
+        webhookUrl: env.BOOTSTRAP_DEMO_WEBHOOK_URL ?? null,
+        webhookSecret: env.BOOTSTRAP_DEMO_WEBHOOK_SECRET ?? null,
       },
     });
     console.log(`[bootstrap] Empresa demo criada: ${company.id}`);
+  } else if (env.BOOTSTRAP_DEMO_WEBHOOK_URL) {
+    company = await prisma.company.update({
+      where: { id: company.id },
+      data: {
+        webhookUrl: env.BOOTSTRAP_DEMO_WEBHOOK_URL,
+        webhookSecret: env.BOOTSTRAP_DEMO_WEBHOOK_SECRET ?? company.webhookSecret,
+      },
+    });
+    console.log(`[bootstrap] Webhook demo atualizado`);
   }
 
   const existingKey = await prisma.apiKey.findFirst({

@@ -45,6 +45,16 @@
       <div><label>Próximo número</label><input type="number" name="proximoNumeroNfe" value="<%= company.proximoNumeroNfe %>" /></div>
     </div>
     <label><input type="checkbox" name="homologacaoOk" <%= company.homologacaoOk ? 'checked' : '' %> /> Homologação OK (Contador)</label>
+    <div class="form-grid">
+      <div>
+        <label>Webhook URL (ERP)</label>
+        <input name="webhookUrl" placeholder="https://…/webhooks/gateway-fiscal" value="<%= company.webhookUrl || '' %>" />
+      </div>
+      <div>
+        <label>Webhook secret</label>
+        <input name="webhookSecret" value="<%= company.webhookSecret || '' %>" />
+      </div>
+    </div>
     <button type="submit">Salvar dados</button>
   </form>
 

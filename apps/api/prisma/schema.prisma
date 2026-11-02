@@ -62,6 +62,8 @@ model Company {
   ambiente         Ambiente  @default(homologacao)
   producaoLiberada Boolean   @default(false)
   homologacaoOk    Boolean   @default(false)
+  webhookUrl       String?
+  webhookSecret    String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   certificate      Certificate?

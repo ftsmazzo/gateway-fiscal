@@ -4,6 +4,7 @@
     <a href="/admin">Dashboard</a>
     <% if (user.role === 'ADMIN' || user.role === 'CONTADOR') { %>
       <a href="/admin/empresas">Empresas</a>
+      <a href="/admin/documentos">Documentos</a>
       <a href="/admin/health">Health</a>
     <% } %>
     <% if (user.role === 'ADMIN') { %>

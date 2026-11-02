@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { decryptBytes, decryptText } from "../lib/crypto.js";
+import { dispatchDocumentWebhook } from "../lib/webhook.js";
 import type { SefazAdapter } from "./types.js";
 
 export async function processDocument(
@@ -58,7 +59,7 @@ export async function processDocument(
   });
 
   if (result.ok) {
-    await prisma.document.update({
+    const updated = await prisma.document.update({
       where: { id: documentId },
       data: {
         status: "autorizada",
@@ -70,10 +71,11 @@ export async function processDocument(
       },
     });
     console.info(`[worker] ${documentId} autorizada chave=${result.chaveAcesso} via ${adapter.name}`);
+    await dispatchDocumentWebhook("nfe.autorizada", updated, doc.company);
     return;
   }
 
-  await prisma.document.update({
+  const rejected = await prisma.document.update({
     where: { id: documentId },
     data: {
       status: "rejeitada",
@@ -82,4 +84,5 @@ export async function processDocument(
     },
   });
   console.warn(`[worker] ${documentId} rejeitada ${result.code}: ${result.message}`);
+  await dispatchDocumentWebhook("nfe.rejeitada", rejected, doc.company);
 }

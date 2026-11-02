@@ -185,9 +185,22 @@ export async function adminRoutes(app: FastifyInstance, env: Env) {
         serieNfe: Number(body.serieNfe || 1),
         proximoNumeroNfe: Number(body.proximoNumeroNfe || 1),
         homologacaoOk: body.homologacaoOk === "on",
+        webhookUrl: body.webhookUrl?.trim() || null,
+        webhookSecret: body.webhookSecret?.trim() || null,
       },
     });
     return reply.redirect(`/admin/empresas/${id}?flash=dados_salvos`);
+  });
+
+  app.get("/admin/documentos", async (request, reply) => {
+    const user = await requireSession(request, reply, ["ADMIN", "CONTADOR"]);
+    if (!user) return;
+    const docs = await prisma.document.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: { company: { select: { razaoSocial: true, cnpj: true } } },
+    });
+    return reply.view("documentos.ejs", { user, docs });
   });
 
   app.post("/admin/empresas/:id/ambiente", async (request, reply) => {
